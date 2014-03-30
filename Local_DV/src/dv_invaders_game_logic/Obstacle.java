@@ -36,7 +36,7 @@ public class Obstacle implements Crash {
 			y = 0;
 			x = rand.nextInt(400);
 		}
-		if (x>400 || x<0){
+		if (x > 400 || x < 0){
 			velX = -velX;
 		}
 		x+=velX;
@@ -62,5 +62,9 @@ public class Obstacle implements Crash {
 	public void speedUp(){
 		velX = 2*velX;
 		velY = 2*velY;
+	}
+	
+	public boolean hasBeenShot(){
+		return game.getShot().getHitbox().intersects(hitbox);
 	}
 }

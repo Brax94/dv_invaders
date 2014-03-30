@@ -13,9 +13,9 @@ public class Slower extends Powerup {
 	public Slower(Game game, Player player){
 		this.game = game;
 		this.player = player;
-		this.x=0;
+		this.x=rand.nextInt(400);
 		this.y=rand.nextInt(10);
-		this.velY = rand.nextInt(5) + 2;
+		this.velY = 6;
 		this.velX = (rand.nextInt(3) + 3) * Math.pow((-1), rand.nextInt(2));
 		this.hitbox = new Rectangle(20,20);
 		this.onScreen = true;

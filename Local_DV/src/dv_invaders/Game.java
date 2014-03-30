@@ -10,20 +10,25 @@ import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.Random;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import dv_invaders_game_logic.BonusPoints;
+import dv_invaders_game_logic.ExtraLife;
 import dv_invaders_game_logic.Objects;
 import dv_invaders_game_logic.Obstacle;
 import dv_invaders_game_logic.Player;
 import dv_invaders_game_logic.Powerup;
+import dv_invaders_game_logic.Reverse;
 import dv_invaders_game_logic.Shield;
 import dv_invaders_game_logic.Shooter;
 import dv_invaders_game_logic.Shot;
 import dv_invaders_game_logic.Slower;
+import dv_invaders_game_logic.SpeedUp;
 
 @SuppressWarnings("serial")
 public class Game extends Canvas implements Runnable {
@@ -33,6 +38,8 @@ public class Game extends Canvas implements Runnable {
 	public static final int SCALE = 1;
 	public static final String TITLE = "Dragvoll Invaders";
 	private int score = 0;
+	private int bonus = 0;
+	private int life = 3;
 
 
 	private Thread thread;
@@ -44,17 +51,24 @@ public class Game extends Canvas implements Runnable {
 	LevelMap map = new LevelMap(this, 1);
 
 	Player player = new Player(this);
-	Obstacle obstacle = new Obstacle(this);
 	public Objects objects = new Objects(this);
 	public SpriteSheet ss;
 	private Powerup powerup;
-	private boolean tempSlow = false;
 	private int hasPowerup;
+	// Shooter - 1
+	// Shield - 2
+	// Slower - 3
+	// Reverse - 4
+	// Bonuspoints - 5
+	// Speedup - 6
+	// Extra Life - 7
+
 	private boolean isPowerup = false;
 	Random random =  new Random();
 
 	private Shot shot;
 	private boolean hasShot;
+
 
 
 	private Menu menu = new Menu();
@@ -139,7 +153,7 @@ public class Game extends Canvas implements Runnable {
 
 			if ((System.currentTimeMillis() - timer) > 1000) {
 				timer += 1000;
-				System.out.println(updates + " Ticks, FPS " + frames + " Score: " + score);
+				System.out.println(updates + " Ticks, FPS " + frames + " Score: " + score + " Bonus: " + bonus);
 				updates = 0;
 				frames = 0;
 			}
@@ -170,14 +184,14 @@ public class Game extends Canvas implements Runnable {
 		//		else{
 		map.render(g);
 		player.render(g, playerSprite);
-		obstacle.render(g, obstacleSprite);
-		objects.render(g);
 		if (isPowerup){
 			powerup.render(g);
 		}
+
 		if (hasShot){
 			shot.render(g);
 		}
+		objects.render(g);
 		//		}
 
 		g.dispose();
@@ -186,27 +200,44 @@ public class Game extends Canvas implements Runnable {
 	}
 
 	int i = 0;
+	int j = 0;
 	public void tick(){
 		map.tick();
 		player.tick();
 		objects.tick();
-		obstacle.tick();
 		score ++;
-		if (score % 50 == 0 && score < 400){
-			objects.addObstacles();								
+		if (j < 400){
+			j++;
+			if (j % 50 == 0){
+				if (objects.getSize() < 7)
+					objects.addObstacles();
+			}
 		}
 
-		if (score % 300 == 0){
-//			int temp = random.nextInt(3) + 1;
-//			if (temp == 1){
+		if (score % 500 == 0){
+			//skal settes til nextInt(maxtemp) + 1;
+			int temp = random.nextInt(5) + 1;
+			if (temp == 1){
 				powerup = new Shooter(this, player);	
-//			}
-//			else if (temp == 2){
-//				powerup = new Shield(this, player);
-//			}
-//			else if (temp == 3){
-//				powerup = new Slower(this, player);
-//			}
+			}
+			else if (temp == 2){
+				powerup = new Shield(this, player);
+			}
+			else if (temp == 3){
+				powerup = new Slower(this, player);
+			}
+			else if	(temp == 4){
+				powerup = new Reverse(this, player);
+			}
+			else if (temp == 5){
+				powerup = new BonusPoints(this, player);
+			}
+			else if (temp == 6){
+				powerup = new SpeedUp(this, player);
+			}
+			else if (temp == 7){
+				powerup = new ExtraLife(this, player);
+			}
 			isPowerup = powerup.onScreen();
 		}	
 		if (isPowerup){
@@ -221,9 +252,10 @@ public class Game extends Canvas implements Runnable {
 		}
 
 
-		if (i == 600 || (i==300 && hasPowerup == 3)){
+		if (i == 300){
 			hasPowerup = 0;
 			i = 0;
+			System.out.println("END POWERUP!!!");
 
 			//			playerSprite = ss.grabImage(1, 1, 32, 32);
 			deActivatePowerup(powerup);
@@ -231,6 +263,12 @@ public class Game extends Canvas implements Runnable {
 
 		if (hasShot){
 			shot.tick();
+			int temp = objects.hasBeenShot();
+			if (temp != -1){
+				objects.removeObstacle(temp);
+				hasShot = false;
+				bonus+=100;
+			}
 		}
 		//Boss her: if score == ettellerannet;
 	}
@@ -239,27 +277,39 @@ public class Game extends Canvas implements Runnable {
 		int key = e.getKeyCode();
 
 		if(key == KeyEvent.VK_LEFT || key == KeyEvent.VK_A){
-			player.setVelX(-5);
+			if (hasPowerup == 4){
+				player.setVelX(5);
+			}
+			else player.setVelX(-5);
 
 		}
 
 		else if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT){
-			player.setVelX(5);
+			if (hasPowerup == 4){
+				player.setVelX(-5);
+			}
+			else player.setVelX(5);
 
 		}
 		else if(key == KeyEvent.VK_W || key == KeyEvent.VK_UP){
-			player.setVelY(-5);
+			if (hasPowerup == 4){
+				player.setVelY(5);
+			}
+			else player.setVelY(-5);
 
 		}
 
 		else if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN){
-			player.setVelY(5);
+			if (hasPowerup == 4){
+				player.setVelY(-5);
+			}
+			else player.setVelY(5);
 
 		}
 
 		else if (key == KeyEvent.VK_SPACE){
 			if (hasPowerup == 1){
-				Shooter shooter =(Shooter) powerup;
+				Shooter shooter = (Shooter) powerup;
 				shot = shooter.shoot();
 				hasShot = shot.hasShot();
 			}
@@ -291,6 +341,14 @@ public class Game extends Canvas implements Runnable {
 
 	}
 	public void isFinished(){
+		if (life > 1){
+			life--;
+			System.out.println("YOU LOSE A LIFE!");
+			objects.removeAll();
+			j = 0;
+			bonus-=100;
+			return;
+		}
 		running = false;
 		//Legg inn mulighet til retry:
 		JButton button = new JButton("Click here to try again!");
@@ -301,20 +359,23 @@ public class Game extends Canvas implements Runnable {
 	}
 
 	public void activatePowerup(Powerup pp){
-		if (pp instanceof Slower && tempSlow) return;
-		else if (pp instanceof Slower){
-			tempSlow = true;
-		}
+		bonus +=100;
 		//		playerSprite = pp.changeSprite();
 		hasPowerup = pp.activate();	
 		isPowerup = false;
+		if (hasPowerup == 5){
+			bonus += 400;
+			hasPowerup=0;
+		}
+		else if (hasPowerup == 7){
+			life++;
+			System.out.println("1UP!");
+			hasPowerup = 0;
+		}
 	}
 
 	public void deActivatePowerup(Powerup pp){
 		pp.deactivate();
-		if (pp instanceof Slower){
-			tempSlow = false;
-		}
 	}
 
 	public void PowerupOut(){
@@ -342,6 +403,10 @@ public class Game extends Canvas implements Runnable {
 
 	public Shot getShot() {
 		return shot;
+	}
+	
+	public void resetJ() {
+		this.j = 0;
 	}
 
 	public static void main(String[] args) {

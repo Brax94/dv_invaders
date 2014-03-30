@@ -1,2 +1,0 @@
-INDEX VERSION 1.126+/Users/eliasbragstadhagen/Documents/dv_invaders/.metadata/.plugins/org.eclipse.jdt.core
-2461191821.index

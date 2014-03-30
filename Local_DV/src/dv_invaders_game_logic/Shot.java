@@ -34,6 +34,7 @@ public class Shot {
 		if (y<0){
 			hasShot = false;
 		}
+		hitbox.setFrame(x,y,20,20); 
 	}
 	
 	public void render(Graphics g){
@@ -46,6 +47,9 @@ public class Shot {
 	
 	public boolean hasCrashed(Crash o){
 		return hitbox.intersects(o.getHitbox());
+	}
+	public Rectangle2D getHitbox() {
+		return hitbox;
 	}
 
 }
