@@ -30,9 +30,12 @@ import dv_invaders_game_logic.Shot;
 import dv_invaders_game_logic.Slower;
 import dv_invaders_game_logic.SpeedUp;
 
-@SuppressWarnings("serial")
 public class Game extends Canvas implements Runnable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 3472225921955214073L;
 	public static final int WIDTH = 400;
 	public static final int HEIGHT = 600;
 	public static final int SCALE = 1;
@@ -178,10 +181,12 @@ public class Game extends Canvas implements Runnable {
 		Graphics g = bs.getDrawGraphics();
 		g.drawImage(image,0 ,0 ,this);
 
-		//		if(state == STATE.MENU){
-		//			menu.render(g);
-		//		}
-		//		else{
+				if(state == STATE.MENU){
+					map.render(g);
+					menu.render(g);
+					
+				}
+				else{
 		map.render(g);
 		player.render(g, playerSprite);
 		if (isPowerup){
@@ -192,7 +197,7 @@ public class Game extends Canvas implements Runnable {
 			shot.render(g);
 		}
 		objects.render(g);
-		//		}
+				}
 
 		g.dispose();
 		bs.show();
@@ -203,6 +208,7 @@ public class Game extends Canvas implements Runnable {
 	int j = 0;
 	public void tick(){
 		map.tick();
+		if(state == STATE.GAME){
 		player.tick();
 		objects.tick();
 		score ++;
@@ -213,6 +219,7 @@ public class Game extends Canvas implements Runnable {
 					objects.addObstacles();
 			}
 		}
+		
 
 		if (score % 500 == 0){
 			//skal settes til nextInt(maxtemp) + 1;
@@ -271,6 +278,8 @@ public class Game extends Canvas implements Runnable {
 			}
 		}
 		//Boss her: if score == ettellerannet;
+		
+		}
 	}
 
 	public void keyPressed(KeyEvent e) {
