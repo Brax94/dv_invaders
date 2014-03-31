@@ -27,15 +27,13 @@ import dv_invaders_game_logic.Reverse;
 import dv_invaders_game_logic.Shield;
 import dv_invaders_game_logic.Shooter;
 import dv_invaders_game_logic.Shot;
+import dv_invaders_game_logic.Shots;
 import dv_invaders_game_logic.Slower;
 import dv_invaders_game_logic.SpeedUp;
 
+@SuppressWarnings("serial")
 public class Game extends Canvas implements Runnable {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 3472225921955214073L;
 	public static final int WIDTH = 400;
 	public static final int HEIGHT = 600;
 	public static final int SCALE = 1;
@@ -58,6 +56,7 @@ public class Game extends Canvas implements Runnable {
 	public SpriteSheet ss;
 	private Powerup powerup;
 	private int hasPowerup;
+	// No powerup - 0
 	// Shooter - 1
 	// Shield - 2
 	// Slower - 3
@@ -66,11 +65,10 @@ public class Game extends Canvas implements Runnable {
 	// Speedup - 6
 	// Extra Life - 7
 
-	private boolean isPowerup = false;
+	private boolean isPowerup = false; // true if powerup onscreen
 	Random random =  new Random();
 
-	private Shot shot;
-	private boolean hasShot;
+	private Shots shots = new Shots(this);
 
 
 
@@ -181,23 +179,19 @@ public class Game extends Canvas implements Runnable {
 		Graphics g = bs.getDrawGraphics();
 		g.drawImage(image,0 ,0 ,this);
 
-				if(state == STATE.MENU){
-					map.render(g);
-					menu.render(g);
-					
-				}
-				else{
+		//		if(state == STATE.MENU){
+		//			menu.render(g);
+		//		}
+		//		else{
 		map.render(g);
 		player.render(g, playerSprite);
 		if (isPowerup){
 			powerup.render(g);
 		}
 
-		if (hasShot){
-			shot.render(g);
-		}
+		shots.render(g);
 		objects.render(g);
-				}
+		//		}
 
 		g.dispose();
 		bs.show();
@@ -208,7 +202,6 @@ public class Game extends Canvas implements Runnable {
 	int j = 0;
 	public void tick(){
 		map.tick();
-		if(state == STATE.GAME){
 		player.tick();
 		objects.tick();
 		score ++;
@@ -219,32 +212,31 @@ public class Game extends Canvas implements Runnable {
 					objects.addObstacles();
 			}
 		}
-		
 
 		if (score % 500 == 0){
 			//skal settes til nextInt(maxtemp) + 1;
-			int temp = random.nextInt(5) + 1;
-			if (temp == 1){
-				powerup = new Shooter(this, player);	
-			}
-			else if (temp == 2){
-				powerup = new Shield(this, player);
-			}
-			else if (temp == 3){
-				powerup = new Slower(this, player);
-			}
-			else if	(temp == 4){
-				powerup = new Reverse(this, player);
-			}
-			else if (temp == 5){
-				powerup = new BonusPoints(this, player);
-			}
-			else if (temp == 6){
-				powerup = new SpeedUp(this, player);
-			}
-			else if (temp == 7){
-				powerup = new ExtraLife(this, player);
-			}
+						int temp = random.nextInt(5) + 1;
+						if (temp == 1){
+			powerup = new Shooter(this, player);	
+						}
+						else if (temp == 2){
+							powerup = new Shield(this, player);
+						}
+						else if (temp == 3){
+							powerup = new Slower(this, player);
+						}
+						else if	(temp == 4){
+							powerup = new Reverse(this, player);
+						}
+						else if (temp == 5){
+							powerup = new BonusPoints(this, player);
+						}
+						else if (temp == 6){
+							powerup = new SpeedUp(this, player);
+						}
+						else if (temp == 7){
+							powerup = new ExtraLife(this, player);
+						}
 			isPowerup = powerup.onScreen();
 		}	
 		if (isPowerup){
@@ -268,19 +260,10 @@ public class Game extends Canvas implements Runnable {
 			deActivatePowerup(powerup);
 		}
 
-		if (hasShot){
-			shot.tick();
-			int temp = objects.hasBeenShot();
-			if (temp != -1){
-				objects.removeObstacle(temp);
-				hasShot = false;
-				bonus+=100;
-			}
-		}
-		//Boss her: if score == ettellerannet;
-		
-		}
+		shots.tick();
+		shots.hasHit();
 	}
+	//Boss her: if score == ettellerannet;
 
 	public void keyPressed(KeyEvent e) {
 		int key = e.getKeyCode();
@@ -319,8 +302,7 @@ public class Game extends Canvas implements Runnable {
 		else if (key == KeyEvent.VK_SPACE){
 			if (hasPowerup == 1){
 				Shooter shooter = (Shooter) powerup;
-				shot = shooter.shoot();
-				hasShot = shot.hasShot();
+				shots.addShot(shooter.shoot());
 			}
 		}
 	}
@@ -356,6 +338,8 @@ public class Game extends Canvas implements Runnable {
 			objects.removeAll();
 			j = 0;
 			bonus-=100;
+			hasPowerup=0;
+			i=0;
 			return;
 		}
 		running = false;
@@ -406,14 +390,7 @@ public class Game extends Canvas implements Runnable {
 	public int getHasPowerup() {
 		return hasPowerup;
 	}
-	public boolean hasShot(){
-		return hasShot;
-	}
 
-	public Shot getShot() {
-		return shot;
-	}
-	
 	public void resetJ() {
 		this.j = 0;
 	}
