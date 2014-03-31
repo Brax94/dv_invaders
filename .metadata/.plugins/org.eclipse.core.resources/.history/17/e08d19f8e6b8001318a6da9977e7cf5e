@@ -1,0 +1,9 @@
+package dv_invaders_game_logic;
+
+import java.util.LinkedList;
+
+public class Shots {
+
+	LinkedList<Shot> shots;
+	
+}
